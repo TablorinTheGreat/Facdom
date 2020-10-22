@@ -24,8 +24,10 @@ public class LockScreenBroadcastReciever extends BroadcastReceiver {
                 }
                 break;
             case Intent.ACTION_SCREEN_OFF:
-                factGenerator.getRandomFact((fact) -> {
-                    notification = NotificatonGenerator.generateNotification("Random Fact", fact.getContent(), getPendingIntentFromFact(fact, context), context);
+                factGenerator.getRandomFact((fact, title) -> {
+                    if (fact != null) {
+                        notification = NotificatonGenerator.generateNotification(title, fact.getContent(), getPendingIntentFromFact(fact, context), context);
+                    }
                 });
                 break;
         }
