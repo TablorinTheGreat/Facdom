@@ -15,39 +15,32 @@ import java.net.URL;
 public abstract class factGenerator {
     private final static String urlString = "https://uselessfacts.jsph.pl/random.json?language=en";
 
-    private static class FactFetcher extends AsyncTask<OnFactRecived, Void, fact> {
+    private static class FactFetcherTask extends AsyncTask<OnFactRecived, Void, fact> {
         OnFactRecived onFactRecived;
+        FetchFact factFetcher;
+
+        public void setFactFetcher(FetchFact factFetcher) {
+            this.factFetcher = factFetcher;
+        }
 
         @Override
         protected fact doInBackground(OnFactRecived... onFactReciveds) {
-            try {
-                this.onFactRecived = onFactReciveds[0];
-                URL url = new URL(urlString);
-                HttpURLConnection urlConnection = (HttpURLConnection) url.openConnection();
-                try {
-                    InputStream in = new BufferedInputStream(urlConnection.getInputStream());
-                    JSONObject factJson = new JSONObject(StreamReader.readInput(in));
-                    return new fact(factJson.getString("text"), "https://www.google.com/search?q=" + factJson.getString("text").replace(' ', '+'));
-                } finally {
-                    urlConnection.disconnect();
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (JSONException e) {
-                e.printStackTrace();
-            }
-            return null;
+            onFactRecived = onFactReciveds[0];
+            if (factFetcher == null) return null;
+            return factFetcher.fetchRandomFact();
         }
 
         @Override
         protected void onPostExecute(fact fact) {
             if (fact != null)
-                this.onFactRecived.factRecieved(fact);
+                this.onFactRecived.factRecieved(fact, factFetcher.getTitle());
         }
     }
 
     public static void getRandomFact(OnFactRecived fc) {
-        new FactFetcher().execute(fc);
+        FactFetcherTask task = new FactFetcherTask();
+        task.setFactFetcher(RandomFetcherGenerator.getRandomFetcher());
+        task.execute(fc);
     }
 
 }
